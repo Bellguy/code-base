@@ -13,13 +13,14 @@ TILE_SIZE = 10
 SCREEN_SIZE = TILES * TILE_SIZE
 
 def update(screen, cells, with_progress=False):
-    updated_cells = np.zeros((cells.shape[0], cells.shape[1]), dtype=int)
+    updated_cells = np.zeros((cells.shape[0], cells.shape[1]))
     
     for row, col in np.ndindex(cells.shape):
         checkRow = 0
         checkCol = 0
         alive = 0
 
+        # Checks Rows and Columns, and loops around when cells reach an edge
         for i in range(-1, 2):
             checkRow = row + i
 
@@ -43,6 +44,7 @@ def update(screen, cells, with_progress=False):
 
         color = COLOR_BG if cells[row, col] == 0 else COLOR_ALIVE_NEXT
 
+        # Game of Life Rules
         if cells[row, col] == 1:
             if alive < 2 or alive > 3:
                 if with_progress:
@@ -56,7 +58,6 @@ def update(screen, cells, with_progress=False):
                 updated_cells[row, col] = 1
                 if with_progress:
                     color = COLOR_ALIVE_NEXT
-
                     
         pygame.draw.rect(screen, color, (col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE - 1, TILE_SIZE - 1))
         
@@ -78,42 +79,42 @@ def createBoard():
     
     while True:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                saveGame(cells)
+            if event.type == pygame.QUIT: 
+                saveGame(cells) # Saves game before quitting
                 pygame.quit()
                 return
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+            elif event.type == pygame.KEYDOWN: # Used for key pressing
+                if event.key == pygame.K_SPACE: # When spacebar is pressed, play/pause game
                     running = not running
                     update(screen, cells)
                     pygame.display.update()
 
-                if event.key == pygame.K_DELETE:
+                if event.key == pygame.K_DELETE: # When delete key is pressed, the board is completely reset
                     cells = np.zeros((TILES, TILES))
                     update(screen, cells)
                     pygame.display.update()
 
                 if event.mod & pygame.KMOD_LSHIFT:
-                    if event.key == pygame.K_h:
+                    if event.key == pygame.K_h: # When h key is pressed, a horizontal line spawns where the mouse cursor is hovering
                         pos = pygame.mouse.get_pos()
                         horLine(cells, pos[1] // TILE_SIZE)
                         update(screen, cells)
                         pygame.display.update()
 
                 if event.mod & pygame.KMOD_LSHIFT:
-                    if event.key == pygame.K_v:
+                    if event.key == pygame.K_v: # When v key is pressed, a vertical line spawns where the mouse cursors is hovering
                         pos = pygame.mouse.get_pos()
                         vertLine(cells, pos[0] // TILE_SIZE)
                         update(screen, cells)
                         pygame.display.update()
-
-            if pygame.mouse.get_pressed()[0]:
+                    
+            if pygame.mouse.get_pressed()[0]: # Places individual cells with left click
                 pos = pygame.mouse.get_pos()
                 cells[pos[1] // TILE_SIZE, pos[0] // TILE_SIZE] = 1
                 update(screen, cells)
                 pygame.display.update()
-
-            if pygame.mouse.get_pressed()[2]:
+                
+            if pygame.mouse.get_pressed()[2]: # Deletes individual cells with right click
                 pos = pygame.mouse.get_pos()
                 cells[pos[1] // TILE_SIZE, pos[0] // TILE_SIZE] = 0
                 update(screen, cells)
@@ -125,22 +126,25 @@ def createBoard():
             cells = update(screen, cells, with_progress=True)
             pygame.display.update()
 
-def saveGame(cells):
+def saveGame(cells): # Function that is used to save the current game state to a file
     saveCells = ''
     for i in range(0, TILES):
         for j in range(0, TILES):
-           saveCells += str(int(cells[i][j]))
+           saveCells += str(int(cells[i][j])) # Game state is converted to a string
 
+    # Writes the game state string to txt file
     f = open("golsave.txt", "w")
     f.write(saveCells)
     f.close()
             
-def readGame(cells):
+def readGame(cells): # Function that reads the last saved game state
     my_file = Path("golsave.txt")
-    if my_file.is_file():
+    if my_file.is_file(): # If file exists, read file
+        # Reads last saved game state
         f = open("golsave.txt", "r")
         values = f.read()
 
+        # Prevents errors if game size is changed
         if len(values) >= TILES*TILES:
             for i in range(0, TILES):
                 for j in range(0, TILES):
@@ -148,20 +152,21 @@ def readGame(cells):
         
         f.close()
 
-def vertLine(cells, col):
+def vertLine(cells, col): # Function that creates vertical line
     for i in range(0, TILES):
         cells[i][col] = 1.0
 
-def horLine(cells, row):
+def horLine(cells, row): # Function that creates horizontal line
     for i in range(0, TILES):
         cells[row][i] = 1.0
 
-class cordinates():
+class cordinates(): # will be used to make GOL structures
     x = 0
     y = 0
 
 def main():
     createBoard()
- 
+
+    
 if __name__ == '__main__':
     main()
